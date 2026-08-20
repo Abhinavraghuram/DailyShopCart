@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Daily Cart</title>
+  <meta name="description" content="Simple groceries and shopping list">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="hero">
+      <div>
+        <div class="eyebrow">PERSONAL SHOPPING LIST</div>
+        <h1>Daily Cart <span>🛒</span></h1>
+        <p>Everything you need, in one clean list.</p>
+      </div>
+      <div class="hero-stats">
+        <div class="stat-card">
+          <span id="totalCount">0</span>
+          <small>Items</small>
+        </div>
+        <div class="stat-card urgent">
+          <span id="highCount">0</span>
+          <small>High priority</small>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="panel add-panel">
+        <div class="section-title-row">
+          <div>
+            <h2>Add an item</h2>
+            <p>Keep the important details right beside the item.</p>
+          </div>
+          <button id="resetBtn" class="ghost-btn" type="button">Clear form</button>
+        </div>
+
+        <form id="itemForm" class="item-form">
+          <input type="hidden" id="itemId">
+
+          <div class="field wide">
+            <label for="name">Item name</label>
+            <input id="name" required maxlength="120" placeholder="e.g. Milk, Rice, Detergent">
+          </div>
+
+          <div class="field">
+            <label for="quantity">Quantity</label>
+            <input id="quantity" type="number" min="1" step="1" value="1" required>
+          </div>
+
+          <div class="field">
+            <label for="unit">Unit</label>
+            <select id="unit">
+              <option value="pcs">pcs</option>
+              <option value="kg">kg</option>
+              <option value="g">g</option>
+              <option value="L">L</option>
+              <option value="ml">ml</option>
+              <option value="pack">pack</option>
+              <option value="box">box</option>
+              <option value="bottle">bottle</option>
+              <option value="dozen">dozen</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="priority">Priority</label>
+            <select id="priority">
+              <option value="high">High</option>
+              <option value="medium" selected>Medium</option>
+              <option value="low">Low</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="category">Category</label>
+            <select id="category">
+              <option>Groceries</option>
+              <option>Household</option>
+              <option>Personal Care</option>
+              <option>Electronics</option>
+              <option>Clothing</option>
+              <option>Medicine</option>
+              <option>Other</option>
+            </select>
+          </div>
+
+          <div class="field wide">
+            <label for="location">Location / shop</label>
+            <input id="location" maxlength="180" placeholder="e.g. DMart, Kukatpally / Google Maps location">
+          </div>
+
+          <div class="field wide">
+            <label for="link">Shopping link</label>
+            <input id="link" type="url" maxlength="500" placeholder="https://www.amazon.in/...">
+          </div>
+
+          <div class="field">
+            <label for="phone">Phone number</label>
+            <input id="phone" type="tel" maxlength="30" placeholder="+91 98765 43210">
+          </div>
+
+          <div class="field wide">
+            <label for="notes">Notes</label>
+            <input id="notes" maxlength="250" placeholder="Brand, size, color, special instructions...">
+          </div>
+
+          <div class="form-actions">
+            <button class="primary-btn" id="submitBtn" type="submit">Add to list</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="toolbar">
+        <div class="search-wrap">
+          <span>⌕</span>
+          <input id="searchInput" placeholder="Search your list...">
+        </div>
+        <select id="filterPriority" class="compact-select">
+          <option value="all">All priorities</option>
+          <option value="high">High</option>
+          <option value="medium">Medium</option>
+          <option value="low">Low</option>
+        </select>
+        <select id="filterCategory" class="compact-select">
+          <option value="all">All categories</option>
+          <option value="Groceries">Groceries</option>
+          <option value="Household">Household</option>
+          <option value="Personal Care">Personal Care</option>
+          <option value="Electronics">Electronics</option>
+          <option value="Clothing">Clothing</option>
+          <option value="Medicine">Medicine</option>
+          <option value="Other">Other</option>
+        </select>
+      </section>
+
+      <section id="listState" class="state-card">Loading your list…</section>
+      <section id="itemsList" class="items-list"></section>
+    </main>
+
+    <footer>
+      <span>Daily Cart</span>
+      <span>Supabase + GitHub Pages</span>
+    </footer>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js"></script>
+</body>
+</html>
