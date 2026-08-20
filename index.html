@@ -12,45 +12,37 @@
 </head>
 <body>
   <div class="app-shell">
-    <aside class="sidebar">
-      <div class="brand">
-        <div class="brand-mark">🛒</div>
-        <div>
-          <strong>Daily Cart</strong>
-          <span>Personal shopping</span>
-        </div>
-      </div>
 
-      <nav class="side-nav" aria-label="Main navigation">
-        <button class="nav-btn active" data-page="home" type="button">
-          <span>⌂</span>
-          <span>Home</span>
-        </button>
-        <button class="nav-btn" data-page="list" type="button">
-          <span>☷</span>
-          <span>Shopping List</span>
-          <b id="sidebarCount">0</b>
-        </button>
-        <button class="nav-btn" data-page="frequent" type="button">
-          <span>★</span>
-          <span>Frequent Buying</span>
-          <b id="frequentSidebarCount">0</b>
-        </button>
-      </nav>
-
-      <div class="sidebar-bottom">
-        <div class="tip-card">
-          <strong>Quick tip</strong>
-          <span>Ticking an item removes it permanently from your list.</span>
+    <header class="app-header">
+      <div class="app-header-inner">
+        <div class="app-brand">
+          <div class="brand-mark">🛒</div>
+          <div>
+            <strong>Daily Cart</strong>
+            <span>Personal shopping</span>
+          </div>
         </div>
+
+        <nav class="top-nav" aria-label="Main navigation">
+          <button class="top-nav-btn active" data-page="home" type="button">
+            <span class="nav-icon">⌂</span>
+            <span>Home</span>
+          </button>
+          <button class="top-nav-btn" data-page="list" type="button">
+            <span class="nav-icon">☷</span>
+            <span>Shopping List</span>
+            <b id="sidebarCount">0</b>
+          </button>
+          <button class="top-nav-btn" data-page="frequent" type="button">
+            <span class="nav-icon">★</span>
+            <span>Frequent</span>
+            <b id="frequentSidebarCount">0</b>
+          </button>
+        </nav>
       </div>
-    </aside>
+    </header>
 
     <div class="main-area">
-      <header class="mobile-topbar">
-        <button id="mobileMenuBtn" class="mobile-menu-btn" type="button" aria-label="Open menu">☰</button>
-        <strong>Daily Cart</strong>
-      </header>
 
       <main>
         <!-- HOME -->

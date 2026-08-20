@@ -166,7 +166,7 @@ function showPage(page) {
   document.querySelectorAll(".page").forEach(el => el.classList.remove("active"));
   $(`page-${page}`).classList.add("active");
 
-  document.querySelectorAll(".nav-btn").forEach(btn => {
+  document.querySelectorAll(".top-nav-btn").forEach(btn => {
     btn.classList.toggle("active", btn.dataset.page === page);
   });
 
@@ -770,7 +770,7 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "Escape" && !$("editModal").hidden) closeEditModal();
 });
 
-document.querySelectorAll(".nav-btn").forEach(btn => {
+document.querySelectorAll(".top-nav-btn").forEach(btn => {
   btn.addEventListener("click", () => showPage(btn.dataset.page));
 });
 
@@ -798,9 +798,6 @@ $("addAnotherBtn").addEventListener("click", () => {
   setTimeout(() => $("name").focus(), 250);
 });
 
-$("mobileMenuBtn").addEventListener("click", () => {
-  document.querySelector(".sidebar")?.classList.toggle("open");
-});
 
 
 $("shoppingModeBtn").addEventListener("click", () => {
