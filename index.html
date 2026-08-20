@@ -170,7 +170,10 @@
               <h1>Everything you need.</h1>
               <p>Edit quantities, units, priorities and details anytime.</p>
             </div>
-            <button id="addAnotherBtn" class="primary-btn" type="button">＋ Add item</button>
+            <div class="list-header-actions">
+              <button id="shoppingModeBtn" class="secondary-btn" type="button">🛒 Shopping Mode</button>
+              <button id="addAnotherBtn" class="primary-btn" type="button">＋ Add item</button>
+            </div>
           </header>
 
           <section class="toolbar">
@@ -211,6 +214,28 @@
         <span>Daily Cart</span>
         <span>Supabase + GitHub Pages</span>
       </footer>
+    </div>
+  </div>
+
+
+  <!-- SHOPPING MODE -->
+  <div id="shoppingModeModal" class="modal-backdrop shopping-mode-backdrop" hidden>
+    <div class="shopping-mode-card">
+      <div class="shopping-mode-header">
+        <div>
+          <div class="eyebrow">SHOPPING MODE</div>
+          <h2>Let's get shopping.</h2>
+          <p><span id="shoppingRemaining">0</span> item(s) remaining</p>
+        </div>
+        <button id="closeShoppingModeBtn" class="modal-close" type="button" aria-label="Close">×</button>
+      </div>
+
+      <div id="shoppingModeList" class="shopping-mode-list"></div>
+
+      <div class="shopping-mode-footer">
+        <span>Tap an item when you put it in your cart.</span>
+        <button id="exitShoppingModeBtn" class="ghost-btn" type="button">Exit shopping mode</button>
+      </div>
     </div>
   </div>
 
