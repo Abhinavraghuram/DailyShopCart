@@ -31,6 +31,11 @@
           <span>Shopping List</span>
           <b id="sidebarCount">0</b>
         </button>
+        <button class="nav-btn" data-page="frequent" type="button">
+          <span>★</span>
+          <span>Frequent Buying</span>
+          <b id="frequentSidebarCount">0</b>
+        </button>
       </nav>
 
       <div class="sidebar-bottom">
@@ -82,9 +87,11 @@
             <form id="itemForm" class="item-form">
               <input type="hidden" id="itemId">
 
-              <div class="field wide">
+              <div class="field wide autocomplete-field">
                 <label for="name">Item name</label>
-                <input id="name" required maxlength="120" placeholder="e.g. Milk, Rice, Detergent">
+                <input id="name" list="frequentSuggestions" required maxlength="120" autocomplete="off" placeholder="e.g. Milk, Rice, Detergent">
+                <datalist id="frequentSuggestions"></datalist>
+                <small id="suggestionHint" class="field-hint">Suggestions from your Frequent Buying list will appear as you type.</small>
               </div>
 
               <div class="field">
@@ -162,6 +169,50 @@
             </span>
             <span class="arrow">→</span>
           </button>
+        </section>
+
+
+        <!-- FREQUENT BUYING -->
+        <section class="page" id="page-frequent">
+          <header class="page-header">
+            <div>
+              <div class="eyebrow">FREQUENT BUYING</div>
+              <h1>Your regular buys.</h1>
+              <p>Keep your everyday items here so they are easy to find when adding a new item.</p>
+            </div>
+          </header>
+
+          <section class="panel frequent-add-panel">
+            <div class="section-title-row">
+              <div>
+                <h2>Add a frequent item</h2>
+                <p>These names will appear as suggestions on the Home screen.</p>
+              </div>
+            </div>
+
+            <form id="frequentForm" class="frequent-form">
+              <div class="field">
+                <label for="frequentName">Item name</label>
+                <input id="frequentName" maxlength="120" required placeholder="e.g. Milk, Eggs, Bread">
+              </div>
+              <button id="frequentSubmitBtn" class="primary-btn" type="submit">＋ Add to Frequent Buying</button>
+            </form>
+          </section>
+
+          <div class="frequent-list-header">
+            <div>
+              <strong id="frequentCountTitle">0 frequent items</strong>
+              <span>•</span>
+              <span>Type a few letters on Home to find them.</span>
+            </div>
+            <div class="search-wrap frequent-search">
+              <span>⌕</span>
+              <input id="frequentSearch" placeholder="Search frequent items...">
+            </div>
+          </div>
+
+          <section id="frequentState" class="state-card">Loading frequent items…</section>
+          <section id="frequentItemsList" class="frequent-items-list"></section>
         </section>
 
         <!-- SHOPPING LIST -->

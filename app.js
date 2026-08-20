@@ -12,7 +12,8 @@ const state = {
   currentPage: "home",
   undoItem: null,
   undoTimer: null,
-  undoDeleting: false
+  undoDeleting: false,
+  frequentItems: []
 };
 
 function esc(value = "") {
@@ -169,14 +170,141 @@ function showPage(page) {
     btn.classList.toggle("active", btn.dataset.page === page);
   });
 
-  window.history.replaceState(null, "", page === "home" ? location.pathname : `${location.pathname}#list`);
+  const hash = page === "home" ? "" : `#${page}`;
+  window.history.replaceState(null, "", `${location.pathname}${hash}`);
   document.querySelector(".sidebar")?.classList.remove("open");
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 function initPage() {
-  const page = location.hash === "#list" ? "list" : "home";
+  const hash = location.hash.replace("#", "");
+  const page = ["home", "list", "frequent"].includes(hash) ? hash : "home";
   showPage(page);
+}
+
+
+function updateFrequentSuggestions(search = "") {
+  const datalist = $("frequentSuggestions");
+  if (!datalist) return;
+
+  const q = search.trim().toLowerCase();
+
+  const matches = state.frequentItems
+    .filter(item => !q || item.name.toLowerCase().startsWith(q))
+    .slice(0, 8);
+
+  datalist.innerHTML = matches
+    .map(item => `<option value="${esc(item.name)}"></option>`)
+    .join("");
+
+  const hint = $("suggestionHint");
+  if (hint) {
+    hint.textContent = matches.length
+      ? `${matches.length} frequent item${matches.length === 1 ? "" : "s"} match${q ? ` "${search.trim()}"` : ""}.`
+      : "Suggestions from your Frequent Buying list will appear as you type.";
+  }
+}
+
+function renderFrequentItems() {
+  const q = $("frequentSearch").value.trim().toLowerCase();
+
+  const items = state.frequentItems.filter(item =>
+    !q || item.name.toLowerCase().includes(q)
+  );
+
+  $("frequentCountTitle").textContent =
+    `${state.frequentItems.length} frequent item${state.frequentItems.length === 1 ? "" : "s"}`;
+
+  $("frequentState").style.display = items.length ? "none" : "block";
+
+  if (!items.length) {
+    $("frequentState").innerHTML = state.frequentItems.length
+      ? `<strong>No matching frequent items</strong><br>Try a different search.`
+      : `<strong>No frequent items yet</strong><br>Add items above and they will become suggestions on Home.`;
+    $("frequentItemsList").innerHTML = "";
+    return;
+  }
+
+  $("frequentItemsList").innerHTML = items.map(item => `
+    <article class="frequent-item">
+      <div class="frequent-star">★</div>
+      <div class="frequent-item-main">
+        <div class="frequent-item-name">${esc(item.name)}</div>
+        <div class="frequent-item-sub">Available as a Home suggestion</div>
+      </div>
+      <div class="frequent-item-actions">
+        <button class="frequent-add-btn" type="button" data-frequent-use="${esc(item.id)}">Use</button>
+        <button class="frequent-delete-btn" type="button" data-frequent-delete="${esc(item.id)}">Delete</button>
+      </div>
+    </article>
+  `).join("");
+}
+
+async function loadFrequentItems() {
+  if (!configured) {
+    renderFrequentItems();
+    updateFrequentSuggestions($("name").value);
+    return;
+  }
+
+  const { data, error } = await client
+    .from("frequent_buying_items")
+    .select("*")
+    .order("name", { ascending: true });
+
+  if (error) {
+    $("frequentState").style.display = "block";
+    $("frequentState").innerHTML =
+      `<strong>Could not load Frequent Buying</strong><br>${esc(error.message)}`;
+    return;
+  }
+
+  state.frequentItems = data || [];
+  $("frequentSidebarCount").textContent = state.frequentItems.length;
+  renderFrequentItems();
+  updateFrequentSuggestions($("name").value);
+}
+
+async function addFrequentItem(name) {
+  const trimmed = name.trim();
+  if (!trimmed) throw new Error("Enter an item name.");
+
+  const exists = state.frequentItems.some(
+    item => item.name.toLowerCase() === trimmed.toLowerCase()
+  );
+
+  if (exists) {
+    throw new Error("That item is already in Frequent Buying.");
+  }
+
+  const { data, error } = await client
+    .from("frequent_buying_items")
+    .insert([{ name: trimmed }])
+    .select()
+    .single();
+
+  if (error) throw error;
+  state.frequentItems.push(data);
+  state.frequentItems.sort((a, b) => a.name.localeCompare(b.name));
+}
+
+async function deleteFrequentItem(id) {
+  const { error } = await client
+    .from("frequent_buying_items")
+    .delete()
+    .eq("id", id);
+
+  if (error) throw error;
+  state.frequentItems = state.frequentItems.filter(item => String(item.id) !== String(id));
+}
+
+function useFrequentItem(item) {
+  resetForm();
+  $("name").value = item.name;
+  updateFrequentSuggestions(item.name);
+
+  showPage("home");
+  setTimeout(() => $("quantity").focus(), 250);
 }
 
 function renderStats() {
@@ -186,6 +314,7 @@ function renderStats() {
   $("totalCountHome").textContent = total;
   $("highCountHome").textContent = high;
   $("sidebarCount").textContent = total;
+  $("frequentSidebarCount").textContent = state.frequentItems.length;
 
   const filtered = filteredItems();
   $("listSummaryText").textContent =
@@ -559,6 +688,72 @@ $("itemsList").addEventListener("click", async (e) => {
   }
 });
 
+
+$("frequentForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  if (!configured) {
+    showToast("Connect Supabase first.");
+    return;
+  }
+
+  const input = $("frequentName");
+  const button = $("frequentSubmitBtn");
+
+  button.disabled = true;
+
+  try {
+    await addFrequentItem(input.value);
+    input.value = "";
+    renderFrequentItems();
+    updateFrequentSuggestions($("name").value);
+    $("frequentSidebarCount").textContent = state.frequentItems.length;
+    showToast("Added to Frequent Buying.");
+    input.focus();
+  } catch (err) {
+    showToast(err.message || "Could not add frequent item.");
+  } finally {
+    button.disabled = false;
+  }
+});
+
+$("frequentSearch").addEventListener("input", renderFrequentItems);
+
+$("name").addEventListener("input", (e) => {
+  updateFrequentSuggestions(e.target.value);
+});
+
+$("name").addEventListener("focus", (e) => {
+  updateFrequentSuggestions(e.target.value);
+});
+
+$("frequentItemsList").addEventListener("click", async (e) => {
+  const useButton = e.target.closest("[data-frequent-use]");
+  const deleteButton = e.target.closest("[data-frequent-delete]");
+
+  if (useButton) {
+    const id = useButton.dataset.frequentUse;
+    const item = state.frequentItems.find(x => String(x.id) === String(id));
+    if (item) useFrequentItem(item);
+    return;
+  }
+
+  if (deleteButton) {
+    const id = deleteButton.dataset.frequentDelete;
+    if (!configured) return;
+
+    try {
+      await deleteFrequentItem(id);
+      renderFrequentItems();
+      updateFrequentSuggestions($("name").value);
+      $("frequentSidebarCount").textContent = state.frequentItems.length;
+      showToast("Removed from Frequent Buying.");
+    } catch (err) {
+      showToast(err.message || "Could not delete frequent item.");
+    }
+  }
+});
+
 $("resetBtn").addEventListener("click", resetForm);
 $("searchInput").addEventListener("input", renderList);
 $("filterPriority").addEventListener("change", renderList);
@@ -659,3 +854,4 @@ initPage();
 renderStats();
 renderList();
 loadItems();
+loadFrequentItems();
