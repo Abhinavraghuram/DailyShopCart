@@ -30,7 +30,7 @@ body {
 button, input, select { font: inherit; }
 button { cursor: pointer; }
 
-.app-shell { display: flex; min-height: 100vh; }
+.app-shell { display: block; min-height: 100vh; }
 
 
 
@@ -118,7 +118,7 @@ button { cursor: pointer; }
   color: white;
 }
 
-.main-area { min-width: 0; flex: 1; }
+.main-area { min-width: 0; width: 100%; }
 
 main { width: min(1080px, calc(100% - 42px)); margin: 0 auto; padding: 30px 0 30px; }
 
@@ -560,13 +560,199 @@ footer { width: min(1080px, calc(100% - 42px)); margin: 0 auto; display: flex; j
 }
 
 @media (max-width: 740px) {
-  .frequent-form { grid-template-columns: 1fr; }
-  .frequent-form .primary-btn { width: 100%; }
-  .frequent-list-header { align-items: stretch; flex-direction: column; }
-  .frequent-search { width: 100%; }
+  .app-header {
+    position: sticky;
+    top: 0;
+    z-index: 80;
+  }
+
+  .app-header-inner {
+    width: 100%;
+    min-height: 0;
+    margin: 0;
+    padding: 10px 10px 8px;
+    gap: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .app-brand {
+    min-height: 34px;
+    padding-left: 3px;
+  }
+
+  .app-brand .brand-mark {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    font-size: 15px;
+  }
+
+  .app-brand strong {
+    font-size: 14px;
+  }
+
+  .app-brand span {
+    font-size: 9px;
+  }
+
+  .top-nav {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 5px;
+    overflow: visible;
+  }
+
+  .top-nav-btn {
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    padding: 0 6px;
+    border-radius: 12px;
+    gap: 4px;
+    font-size: 10px;
+    justify-content: center;
+  }
+
+  .top-nav-btn .nav-icon {
+    font-size: 16px;
+  }
+
+  .top-nav-btn b {
+    min-width: 16px;
+    padding: 2px 4px;
+    font-size: 8px;
+  }
+
+  main {
+    width: calc(100% - 20px);
+    margin: 0 auto;
+    padding: 22px 0 26px;
+  }
+
+  .page-header {
+    gap: 15px;
+    margin-bottom: 18px;
+  }
+
+  .page-header h1 {
+    font-size: clamp(31px, 9vw, 42px);
+  }
+
+  .page-header p {
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  .hero-stats {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 9px;
+  }
+
+  .stat-card {
+    min-width: 0;
+    padding: 13px 12px;
+  }
+
+  .add-panel {
+    padding: 16px;
+    border-radius: 20px;
+  }
+
+  .toolbar {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .search-wrap {
+    grid-column: 1 / -1;
+  }
+
+  .list-header-actions {
+    width: 100%;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .list-header-actions .primary-btn,
+  .list-header-actions .secondary-btn {
+    width: 100%;
+  }
+
+  .frequent-form {
+    grid-template-columns: 1fr;
+  }
+
+  .frequent-form .primary-btn {
+    width: 100%;
+  }
+
+  .frequent-list-header {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 9px;
+  }
+
+  .frequent-search {
+    width: 100%;
+  }
 }
 @media (max-width: 560px) {
   .frequent-items-list { grid-template-columns: 1fr; }
   .frequent-item { align-items: flex-start; }
   .frequent-item-actions { margin-left: auto; flex-direction: column; }
+}
+
+@media (max-width: 420px) {
+  .app-header-inner {
+    padding: 9px 8px 7px;
+  }
+
+  .top-nav-btn {
+    min-height: 42px;
+    padding: 0 3px;
+    font-size: 9px;
+  }
+
+  .top-nav-btn .nav-icon {
+    font-size: 15px;
+  }
+
+  main {
+    width: calc(100% - 16px);
+    padding-top: 19px;
+  }
+
+  .page-header h1 {
+    font-size: 32px;
+  }
+
+  .stat-card {
+    padding: 12px 10px;
+  }
+
+  .stat-card span {
+    font-size: 23px;
+  }
+
+  .item-card {
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .item-actions {
+    flex-wrap: wrap;
+  }
+
+  .icon-btn {
+    padding: 0 9px;
+  }
+
+  .frequent-items-list {
+    grid-template-columns: 1fr;
+  }
 }
