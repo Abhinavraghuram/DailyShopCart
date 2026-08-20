@@ -7,11 +7,7 @@ const configured = !SUPABASE_URL.includes("PASTE_") && !SUPABASE_ANON_KEY.includ
 const client = configured ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
 const $ = (id) => document.getElementById(id);
-const state = { items: [] };
-
-const form = $("itemForm");
-const list = $("itemsList");
-const listState = $("listState");
+const state = { items: [], currentPage: "home" };
 
 function esc(value = "") {
   return String(value)
@@ -40,16 +36,17 @@ function showToast(message) {
 }
 
 function resetForm() {
-  form.reset();
+  $("itemForm").reset();
   $("itemId").value = "";
   $("quantity").value = "1";
   $("unit").value = "pcs";
   $("priority").value = "medium";
   $("category").value = "Groceries";
   $("submitBtn").textContent = "Add to list";
+  $("formTitle").textContent = "Add an item";
 }
 
-function collectForm() {
+function collectMainForm() {
   return {
     name: $("name").value.trim(),
     quantity: Number($("quantity").value),
@@ -63,19 +60,38 @@ function collectForm() {
   };
 }
 
-function populateForm(item) {
-  $("itemId").value = item.id;
-  $("name").value = item.name || "";
-  $("quantity").value = item.quantity || 1;
-  $("unit").value = item.unit || "pcs";
-  $("priority").value = item.priority || "medium";
-  $("category").value = item.category || "Groceries";
-  $("location").value = item.location || "";
-  $("link").value = item.link || "";
-  $("phone").value = item.phone || "";
-  $("notes").value = item.notes || "";
-  $("submitBtn").textContent = "Save changes";
+function showPage(page) {
+  state.currentPage = page;
+
+  document.querySelectorAll(".page").forEach(el => el.classList.remove("active"));
+  $(`page-${page}`).classList.add("active");
+
+  document.querySelectorAll(".nav-btn").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.page === page);
+  });
+
+  window.history.replaceState(null, "", page === "home" ? location.pathname : `${location.pathname}#list`);
+  document.querySelector(".sidebar")?.classList.remove("open");
   window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function initPage() {
+  const page = location.hash === "#list" ? "list" : "home";
+  showPage(page);
+}
+
+function renderStats() {
+  const total = state.items.length;
+  const high = state.items.filter(x => x.priority === "high").length;
+
+  $("totalCountHome").textContent = total;
+  $("highCountHome").textContent = high;
+  $("sidebarCount").textContent = total;
+
+  const filtered = filteredItems();
+  $("listSummaryText").textContent =
+    filtered.length === total ? `${total} item${total === 1 ? "" : "s"}`
+      : `${filtered.length} of ${total} items`;
 }
 
 function filteredItems() {
@@ -86,32 +102,33 @@ function filteredItems() {
   return state.items.filter(item => {
     const hay = [item.name, item.category, item.location, item.notes, item.phone]
       .filter(Boolean).join(" ").toLowerCase();
+
     return (!q || hay.includes(q))
       && (priority === "all" || item.priority === priority)
       && (category === "all" || item.category === category);
   });
 }
 
-function render() {
-  $("totalCount").textContent = state.items.length;
-  $("highCount").textContent = state.items.filter(x => x.priority === "high").length;
-
-  const items = filteredItems();
-  listState.style.display = configured ? (items.length ? "none" : "block") : "block";
+function renderList() {
+  renderStats();
 
   if (!configured) {
-    listState.innerHTML = `<strong>Connect Supabase first</strong><br>Open <code>app.js</code> and replace the two placeholder values at the top.`;
-    list.innerHTML = "";
+    $("listState").style.display = "block";
+    $("listState").innerHTML = `<strong>Connect Supabase first</strong><br>Open <code>app.js</code> and replace the two placeholder values at the top.`;
+    $("itemsList").innerHTML = "";
     return;
   }
+
+  const items = filteredItems();
+  $("listState").style.display = items.length ? "none" : "block";
 
   if (!items.length) {
-    listState.innerHTML = `<strong>Your list is empty</strong><br>Add something above, then it will appear here.`;
-    list.innerHTML = "";
+    $("listState").innerHTML = `<strong>Your list is empty</strong><br>Add something from Home and it will appear here.`;
+    $("itemsList").innerHTML = "";
     return;
   }
 
-  list.innerHTML = items.map(item => {
+  $("itemsList").innerHTML = items.map(item => {
     const link = safeUrl(item.link);
     const mapLink = item.location
       ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.location)}`
@@ -128,8 +145,9 @@ function render() {
             <span class="badge ${esc(item.priority)}">${esc(item.priority)}</span>
             <span class="meta-pill">${esc(item.category)}</span>
           </div>
+
           <div class="item-meta">
-            <span class="meta-pill">${esc(item.quantity)} ${esc(item.unit)}</span>
+            <span class="meta-pill">Qty: ${esc(item.quantity)} ${esc(item.unit)}</span>
             ${item.location ? `<span class="meta-pill">📍 ${esc(item.location)}</span>` : ""}
           </div>
 
@@ -143,8 +161,8 @@ function render() {
         </div>
 
         <div class="item-actions">
-          <button class="icon-btn" type="button" data-action="edit" data-id="${esc(item.id)}" aria-label="Edit">✎</button>
-          <button class="icon-btn delete" type="button" data-action="delete" data-id="${esc(item.id)}" aria-label="Delete">⌫</button>
+          <button class="icon-btn" type="button" data-action="edit" data-id="${esc(item.id)}">Edit</button>
+          <button class="icon-btn delete" type="button" data-action="delete" data-id="${esc(item.id)}">Delete</button>
         </div>
       </article>
     `;
@@ -152,9 +170,14 @@ function render() {
 }
 
 async function loadItems() {
-  if (!configured) return render();
-  listState.textContent = "Loading your list…";
-  listState.style.display = "block";
+  if (!configured) {
+    renderStats();
+    renderList();
+    return;
+  }
+
+  $("listState").style.display = "block";
+  $("listState").textContent = "Loading your list…";
 
   const { data, error } = await client
     .from("shopping_items")
@@ -163,12 +186,13 @@ async function loadItems() {
     .order("created_at", { ascending: false });
 
   if (error) {
-    listState.innerHTML = `<strong>Could not load the list</strong><br>${esc(error.message)}`;
+    $("listState").innerHTML = `<strong>Could not load the list</strong><br>${esc(error.message)}`;
     return;
   }
 
   state.items = data || [];
-  render();
+  renderStats();
+  renderList();
 }
 
 async function saveItem(payload, id = null) {
@@ -179,6 +203,7 @@ async function saveItem(payload, id = null) {
       .eq("id", id)
       .select()
       .single();
+
     if (error) throw error;
     return data;
   }
@@ -188,6 +213,7 @@ async function saveItem(payload, id = null) {
     .insert(payload)
     .select()
     .single();
+
   if (error) throw error;
   return data;
 }
@@ -197,33 +223,57 @@ async function deleteItem(id) {
   if (error) throw error;
 }
 
-form.addEventListener("submit", async (e) => {
+function openEditModal(item) {
+  $("editItemId").value = item.id;
+  $("editName").value = item.name || "";
+  $("editQuantity").value = item.quantity || 1;
+  $("editUnit").value = item.unit || "pcs";
+  $("editPriority").value = item.priority || "medium";
+  $("editCategory").value = item.category || "Groceries";
+  $("editLocation").value = item.location || "";
+  $("editLink").value = item.link || "";
+  $("editPhone").value = item.phone || "";
+  $("editNotes").value = item.notes || "";
+
+  $("editModal").hidden = false;
+  document.body.classList.add("modal-open");
+  setTimeout(() => $("editName").focus(), 20);
+}
+
+function closeEditModal() {
+  $("editModal").hidden = true;
+  document.body.classList.remove("modal-open");
+}
+
+$("itemForm").addEventListener("submit", async (e) => {
   e.preventDefault();
+
   if (!configured) {
     showToast("Connect Supabase first.");
     return;
   }
 
   const id = $("itemId").value || null;
-  const payload = collectForm();
+  const payload = collectMainForm();
 
   if (!payload.name || payload.quantity < 1) {
     showToast("Enter an item name and valid quantity.");
     return;
   }
 
-  const link = payload.link;
-  if (link && !safeUrl(link)) {
+  if (payload.link && !safeUrl(payload.link)) {
     showToast("Shopping link must start with http:// or https://");
     return;
   }
 
   $("submitBtn").disabled = true;
+
   try {
     await saveItem(payload, id);
     showToast(id ? "Item updated." : "Item added.");
     resetForm();
     await loadItems();
+    showPage(id ? "list" : "home");
   } catch (err) {
     showToast(err.message || "Could not save item.");
   } finally {
@@ -231,12 +281,49 @@ form.addEventListener("submit", async (e) => {
   }
 });
 
-$("resetBtn").addEventListener("click", resetForm);
-$("searchInput").addEventListener("input", render);
-$("filterPriority").addEventListener("change", render);
-$("filterCategory").addEventListener("change", render);
+$("editForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-list.addEventListener("click", async (e) => {
+  const id = $("editItemId").value;
+  if (!configured || !id) return;
+
+  const payload = {
+    name: $("editName").value.trim(),
+    quantity: Number($("editQuantity").value),
+    unit: $("editUnit").value,
+    priority: $("editPriority").value,
+    category: $("editCategory").value,
+    location: $("editLocation").value.trim() || null,
+    link: $("editLink").value.trim() || null,
+    phone: $("editPhone").value.trim() || null,
+    notes: $("editNotes").value.trim() || null
+  };
+
+  if (!payload.name || payload.quantity < 1) {
+    showToast("Enter an item name and valid quantity.");
+    return;
+  }
+
+  if (payload.link && !safeUrl(payload.link)) {
+    showToast("Shopping link must start with http:// or https://");
+    return;
+  }
+
+  $("saveEditBtn").disabled = true;
+
+  try {
+    await saveItem(payload, id);
+    closeEditModal();
+    showToast("Item updated.");
+    await loadItems();
+  } catch (err) {
+    showToast(err.message || "Could not update item.");
+  } finally {
+    $("saveEditBtn").disabled = false;
+  }
+});
+
+$("itemsList").addEventListener("click", async (e) => {
   const button = e.target.closest("[data-action]");
   if (!button || !configured) return;
 
@@ -247,7 +334,7 @@ list.addEventListener("click", async (e) => {
 
   try {
     if (action === "edit") {
-      populateForm(item);
+      openEditModal(item);
       return;
     }
 
@@ -261,5 +348,42 @@ list.addEventListener("click", async (e) => {
   }
 });
 
-render();
+$("resetBtn").addEventListener("click", resetForm);
+$("searchInput").addEventListener("input", renderList);
+$("filterPriority").addEventListener("change", renderList);
+$("filterCategory").addEventListener("change", renderList);
+
+$("closeModalBtn").addEventListener("click", closeEditModal);
+$("cancelEditBtn").addEventListener("click", closeEditModal);
+
+$("editModal").addEventListener("click", (e) => {
+  if (e.target === $("editModal")) closeEditModal();
+});
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && !$("editModal").hidden) closeEditModal();
+});
+
+document.querySelectorAll(".nav-btn").forEach(btn => {
+  btn.addEventListener("click", () => showPage(btn.dataset.page));
+});
+
+$("viewListFromHome").addEventListener("click", () => showPage("list"));
+
+$("addAnotherBtn").addEventListener("click", () => {
+  resetForm();
+  showPage("home");
+  setTimeout(() => $("name").focus(), 250);
+});
+
+$("mobileMenuBtn").addEventListener("click", () => {
+  document.querySelector(".sidebar")?.classList.toggle("open");
+});
+
+window.addEventListener("hashchange", initPage);
+
+initPage();
+renderStats();
+renderList();
 loadItems();
+
