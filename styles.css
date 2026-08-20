@@ -665,3 +665,223 @@ footer { width: min(1080px, calc(100% - 42px)); margin: 0 auto; display: flex; j
     padding: 0 9px;
   }
 }
+
+
+/* ---------- Frequent Buying: clean reference layout ---------- */
+.frequent-add-panel {
+  padding: 22px;
+}
+
+.frequent-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 12px;
+}
+
+.frequent-form .field {
+  min-width: 0;
+}
+
+.frequent-form .primary-btn {
+  min-width: 230px;
+  white-space: nowrap;
+}
+
+.frequent-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin: 18px 0 12px;
+}
+
+.frequent-list-header > div:first-child {
+  min-width: 0;
+  color: #98a2b3;
+  font-size: 11px;
+}
+
+.frequent-list-header strong {
+  color: #344054;
+}
+
+.frequent-search {
+  width: min(330px, 100%);
+  flex: 0 0 auto;
+}
+
+.frequent-items-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.frequent-item {
+  min-width: 0;
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 13px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: 0 7px 22px rgba(20,28,40,.04);
+}
+
+.frequent-star {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 11px;
+  background: #fff7e5;
+  color: #b54708;
+  font-size: 16px;
+}
+
+.frequent-item-main {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.frequent-item-name {
+  color: #17202a;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.frequent-item-sub {
+  margin-top: 4px;
+  color: #98a2b3;
+  font-size: 9px;
+  line-height: 1.2;
+}
+
+.frequent-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.frequent-add-btn,
+.frequent-delete-btn {
+  min-height: 34px;
+  border: 1px solid #e4e7ec;
+  border-radius: 10px;
+  padding: 0 9px;
+  background: #fff;
+  color: #344054;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.frequent-add-btn:hover {
+  background: #f7f8fa;
+}
+
+.frequent-delete-btn:hover {
+  color: #b42318;
+  border-color: #fecdca;
+  background: #fff6f5;
+}
+
+.frequent-form .field-hint {
+  display: block;
+  margin-top: 6px;
+  color: #98a2b3;
+  font-size: 9px;
+}
+
+/* Keep controls visually compact and consistent. */
+.frequent-add-panel input,
+.frequent-search input {
+  font-size: 12px;
+}
+
+@media (max-width: 740px) {
+  .frequent-add-panel {
+    padding: 16px;
+  }
+
+  .frequent-form {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .frequent-form .primary-btn {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .frequent-list-header {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .frequent-search {
+    width: 100%;
+  }
+
+  .frequent-items-list {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .frequent-item {
+    min-height: 60px;
+    padding: 10px 11px;
+    gap: 9px;
+    border-radius: 14px;
+  }
+
+  .frequent-star {
+    width: 32px;
+    height: 32px;
+    flex-basis: 32px;
+    border-radius: 10px;
+    font-size: 14px;
+  }
+
+  .frequent-item-name {
+    font-size: 13px;
+  }
+
+  .frequent-item-sub {
+    font-size: 9px;
+  }
+
+  .frequent-item-actions {
+    gap: 5px;
+  }
+
+  .frequent-add-btn,
+  .frequent-delete-btn {
+    min-height: 32px;
+    padding: 0 8px;
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 420px) {
+  .frequent-item {
+    padding: 9px 10px;
+  }
+
+  .frequent-item-actions {
+    gap: 4px;
+  }
+
+  .frequent-add-btn,
+  .frequent-delete-btn {
+    min-height: 31px;
+    padding: 0 7px;
+  }
+}
+
