@@ -7,7 +7,13 @@ const configured = !SUPABASE_URL.includes("PASTE_") && !SUPABASE_ANON_KEY.includ
 const client = configured ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
 const $ = (id) => document.getElementById(id);
-const state = { items: [], currentPage: "home" };
+const state = {
+  items: [],
+  currentPage: "home",
+  undoItem: null,
+  undoTimer: null,
+  undoDeleting: false
+};
 
 function esc(value = "") {
   return String(value)
@@ -29,10 +35,42 @@ function safeUrl(raw) {
 
 function showToast(message) {
   const el = $("toast");
-  el.textContent = message;
+  el.innerHTML = esc(message);
   el.classList.add("show");
   clearTimeout(window.__toastTimer);
   window.__toastTimer = setTimeout(() => el.classList.remove("show"), 2200);
+}
+
+function showUndoToast(item) {
+  const el = $("toast");
+  el.innerHTML = `<span class="undo-toast"><span>✅ ${esc(item.name)} removed</span><button id="undoCompleteBtn" type="button">UNDO</button></span>`;
+  el.classList.add("show");
+
+  clearTimeout(window.__toastTimer);
+  clearTimeout(state.undoTimer);
+
+  state.undoItem = structuredClone(item);
+
+  el.querySelector("#undoCompleteBtn").addEventListener("click", async () => {
+    clearTimeout(state.undoTimer);
+    state.undoTimer = null;
+
+    try {
+      const restored = { ...state.undoItem };
+      delete restored.priority_order;
+      await saveItem(restored, null);
+      showToast("Item restored.");
+      state.undoItem = null;
+      await loadItems();
+    } catch (err) {
+      showToast(err.message || "Could not restore item.");
+    }
+  });
+
+  state.undoTimer = setTimeout(() => {
+    state.undoItem = null;
+    el.classList.remove("show");
+  }, 5000);
 }
 
 function resetForm() {
@@ -109,6 +147,40 @@ function filteredItems() {
   });
 }
 
+
+function renderShoppingMode() {
+  const items = state.items.slice().sort((a, b) => {
+    const p = { high: 1, medium: 2, low: 3 };
+    return (p[a.priority] - p[b.priority])
+      || String(a.name).localeCompare(String(b.name));
+  });
+
+  $("shoppingRemaining").textContent = items.length;
+
+  if (!items.length) {
+    $("shoppingModeList").innerHTML = `
+      <div class="empty">
+        <strong>🎉 Shopping complete</strong>
+        <span>There are no remaining items on your list.</span>
+      </div>
+    `;
+    return;
+  }
+
+  $("shoppingModeList").innerHTML = items.map(item => `
+    <div class="shopping-mode-item">
+      <button class="shopping-complete-btn" type="button" data-shopping-complete="${esc(item.id)}" aria-label="Complete ${esc(item.name)}">✓</button>
+      <div class="shopping-mode-item-main">
+        <div class="shopping-mode-item-name">${esc(item.name)}</div>
+        <div class="shopping-mode-item-sub">
+          ${esc(item.quantity)} ${esc(item.unit)}${item.location ? ` · 📍 ${esc(item.location)}` : ""}
+        </div>
+      </div>
+      <span class="badge ${esc(item.priority)} shopping-mode-badge">${esc(item.priority)}</span>
+    </div>
+  `).join("");
+}
+
 function renderList() {
   renderStats();
 
@@ -147,8 +219,29 @@ function renderList() {
           </div>
 
           <div class="item-meta">
-            <span class="meta-pill">Qty: ${esc(item.quantity)} ${esc(item.unit)}</span>
             ${item.location ? `<span class="meta-pill">📍 ${esc(item.location)}</span>` : ""}
+          </div>
+
+          <div class="inline-editor" data-editor-id="${esc(item.id)}">
+            <div class="qty-control">
+              <button type="button" data-inline-action="minus" data-id="${esc(item.id)}">−</button>
+              <span data-qty="${esc(item.id)}">${esc(item.quantity)}</span>
+              <button type="button" data-inline-action="plus" data-id="${esc(item.id)}">+</button>
+            </div>
+
+            <select class="inline-select" data-inline-field="unit" data-id="${esc(item.id)}" aria-label="Unit">
+              ${["pcs","kg","g","L","ml","pack","box","bottle","dozen"].map(unit =>
+                `<option value="${unit}" ${item.unit === unit ? "selected" : ""}>${unit}</option>`
+              ).join("")}
+            </select>
+
+            <select class="inline-select" data-inline-field="priority" data-id="${esc(item.id)}" aria-label="Priority">
+              ${["high","medium","low"].map(priority =>
+                `<option value="${priority}" ${item.priority === priority ? "selected" : ""}>${priority[0].toUpperCase()+priority.slice(1)}</option>`
+              ).join("")}
+            </select>
+
+            <button class="inline-save" type="button" data-inline-save="${esc(item.id)}">Save</button>
           </div>
 
           ${item.notes ? `<div class="item-notes">${esc(item.notes)}</div>` : ""}
@@ -161,7 +254,7 @@ function renderList() {
         </div>
 
         <div class="item-actions">
-          <button class="icon-btn" type="button" data-action="edit" data-id="${esc(item.id)}">Edit</button>
+          <button class="icon-btn" type="button" data-action="edit" data-id="${esc(item.id)}">More edit</button>
           <button class="icon-btn delete" type="button" data-action="delete" data-id="${esc(item.id)}">Delete</button>
         </div>
       </article>
@@ -323,6 +416,54 @@ $("editForm").addEventListener("submit", async (e) => {
   }
 });
 
+
+$("itemsList").addEventListener("click", async (e) => {
+  const inlineAction = e.target.closest("[data-inline-action]");
+  const inlineSave = e.target.closest("[data-inline-save]");
+
+  if (inlineAction && configured) {
+    const id = inlineAction.dataset.id;
+    const item = state.items.find(x => String(x.id) === String(id));
+    if (!item) return;
+
+    const qtyEl = document.querySelector(`[data-qty="${CSS.escape(id)}"]`);
+    if (!qtyEl) return;
+
+    let qty = Number(qtyEl.textContent) || 1;
+    qty = inlineAction.dataset.inlineAction === "plus" ? qty + 1 : Math.max(1, qty - 1);
+    qtyEl.textContent = qty;
+    return;
+  }
+
+  if (inlineSave && configured) {
+    const id = inlineSave.dataset.inlineSave;
+    const item = state.items.find(x => String(x.id) === String(id));
+    if (!item) return;
+
+    const editor = document.querySelector(`[data-editor-id="${CSS.escape(id)}"]`);
+    if (!editor) return;
+
+    const qty = Number(editor.querySelector(`[data-qty="${CSS.escape(id)}"]`).textContent);
+    const unit = editor.querySelector(`[data-inline-field="unit"][data-id="${CSS.escape(id)}"]`).value;
+    const priority = editor.querySelector(`[data-inline-field="priority"][data-id="${CSS.escape(id)}"]`).value;
+
+    inlineSave.disabled = true;
+
+    try {
+      await saveItem({ quantity: qty, unit, priority }, id);
+      showToast("Quantity and priority updated.");
+      await loadItems();
+      if (!$("shoppingModeModal").hidden) renderShoppingMode();
+    } catch (err) {
+      showToast(err.message || "Could not update item.");
+    } finally {
+      inlineSave.disabled = false;
+    }
+
+    return;
+  }
+});
+
 $("itemsList").addEventListener("click", async (e) => {
   const button = e.target.closest("[data-action]");
   if (!button || !configured) return;
@@ -338,9 +479,16 @@ $("itemsList").addEventListener("click", async (e) => {
       return;
     }
 
-    if (action === "delete" || action === "complete") {
+    if (action === "complete") {
       await deleteItem(id);
-      showToast(action === "complete" ? "Completed and removed." : "Item deleted.");
+      await loadItems();
+      showUndoToast(item);
+      return;
+    }
+
+    if (action === "delete") {
+      await deleteItem(id);
+      showToast("Item deleted.");
       await loadItems();
     }
   } catch (err) {
@@ -380,10 +528,55 @@ $("mobileMenuBtn").addEventListener("click", () => {
   document.querySelector(".sidebar")?.classList.toggle("open");
 });
 
+
+$("shoppingModeBtn").addEventListener("click", () => {
+  $("shoppingModeModal").hidden = false;
+  renderShoppingMode();
+});
+
+$("closeShoppingModeBtn").addEventListener("click", () => {
+  $("shoppingModeModal").hidden = true;
+});
+
+$("exitShoppingModeBtn").addEventListener("click", () => {
+  $("shoppingModeModal").hidden = true;
+});
+
+$("shoppingModeModal").addEventListener("click", async (e) => {
+  const button = e.target.closest("[data-shopping-complete]");
+  if (!button || !configured) return;
+
+  const id = button.dataset.shoppingComplete;
+  const item = state.items.find(x => String(x.id) === String(id));
+  if (!item) return;
+
+  try {
+    button.disabled = true;
+    await deleteItem(id);
+    await loadItems();
+    renderShoppingMode();
+    showUndoToast(item);
+
+    if (!state.items.length) {
+      setTimeout(() => {
+        if (!$("shoppingModeModal").hidden) {
+          renderShoppingMode();
+        }
+      }, 50);
+    }
+  } catch (err) {
+    button.disabled = false;
+    showToast(err.message || "Could not complete item.");
+  }
+});
+
+$("shoppingModeModal").addEventListener("click", (e) => {
+  if (e.target === $("shoppingModeModal")) $("shoppingModeModal").hidden = true;
+});
+
 window.addEventListener("hashchange", initPage);
 
 initPage();
 renderStats();
 renderList();
 loadItems();
-
