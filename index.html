@@ -12,141 +12,295 @@
 </head>
 <body>
   <div class="app-shell">
-    <header class="hero">
-      <div>
-        <div class="eyebrow">PERSONAL SHOPPING LIST</div>
-        <h1>Daily Cart <span>🛒</span></h1>
-        <p>Everything you need, in one clean list.</p>
-      </div>
-      <div class="hero-stats">
-        <div class="stat-card">
-          <span id="totalCount">0</span>
-          <small>Items</small>
-        </div>
-        <div class="stat-card urgent">
-          <span id="highCount">0</span>
-          <small>High priority</small>
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">🛒</div>
+        <div>
+          <strong>Daily Cart</strong>
+          <span>Personal shopping</span>
         </div>
       </div>
-    </header>
 
-    <main>
-      <section class="panel add-panel">
-        <div class="section-title-row">
-          <div>
-            <h2>Add an item</h2>
-            <p>Keep the important details right beside the item.</p>
-          </div>
-          <button id="resetBtn" class="ghost-btn" type="button">Clear form</button>
+      <nav class="side-nav" aria-label="Main navigation">
+        <button class="nav-btn active" data-page="home" type="button">
+          <span>⌂</span>
+          <span>Home</span>
+        </button>
+        <button class="nav-btn" data-page="list" type="button">
+          <span>☷</span>
+          <span>Shopping List</span>
+          <b id="sidebarCount">0</b>
+        </button>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <div class="tip-card">
+          <strong>Quick tip</strong>
+          <span>Ticking an item removes it permanently from your list.</span>
         </div>
+      </div>
+    </aside>
 
-        <form id="itemForm" class="item-form">
-          <input type="hidden" id="itemId">
+    <div class="main-area">
+      <header class="mobile-topbar">
+        <button id="mobileMenuBtn" class="mobile-menu-btn" type="button" aria-label="Open menu">☰</button>
+        <strong>Daily Cart</strong>
+      </header>
 
-          <div class="field wide">
-            <label for="name">Item name</label>
-            <input id="name" required maxlength="120" placeholder="e.g. Milk, Rice, Detergent">
-          </div>
+      <main>
+        <!-- HOME -->
+        <section class="page active" id="page-home">
+          <header class="page-header">
+            <div>
+              <div class="eyebrow">HOME</div>
+              <h1>Plan your shopping.</h1>
+              <p>Add groceries and anything else you need to buy.</p>
+            </div>
+            <div class="hero-stats">
+              <div class="stat-card">
+                <span id="totalCountHome">0</span>
+                <small>Items</small>
+              </div>
+              <div class="stat-card urgent">
+                <span id="highCountHome">0</span>
+                <small>High priority</small>
+              </div>
+            </div>
+          </header>
 
-          <div class="field">
-            <label for="quantity">Quantity</label>
-            <input id="quantity" type="number" min="1" step="1" value="1" required>
-          </div>
+          <section class="panel add-panel">
+            <div class="section-title-row">
+              <div>
+                <h2 id="formTitle">Add an item</h2>
+                <p>Keep the important details right beside the item.</p>
+              </div>
+              <button id="resetBtn" class="ghost-btn" type="button">Clear form</button>
+            </div>
 
-          <div class="field">
-            <label for="unit">Unit</label>
-            <select id="unit">
-              <option value="pcs">pcs</option>
-              <option value="kg">kg</option>
-              <option value="g">g</option>
-              <option value="L">L</option>
-              <option value="ml">ml</option>
-              <option value="pack">pack</option>
-              <option value="box">box</option>
-              <option value="bottle">bottle</option>
-              <option value="dozen">dozen</option>
-            </select>
-          </div>
+            <form id="itemForm" class="item-form">
+              <input type="hidden" id="itemId">
 
-          <div class="field">
-            <label for="priority">Priority</label>
-            <select id="priority">
+              <div class="field wide">
+                <label for="name">Item name</label>
+                <input id="name" required maxlength="120" placeholder="e.g. Milk, Rice, Detergent">
+              </div>
+
+              <div class="field">
+                <label for="quantity">Quantity</label>
+                <input id="quantity" type="number" min="1" step="1" value="1" required>
+              </div>
+
+              <div class="field">
+                <label for="unit">Unit</label>
+                <select id="unit">
+                  <option value="pcs">pcs</option>
+                  <option value="kg">kg</option>
+                  <option value="g">g</option>
+                  <option value="L">L</option>
+                  <option value="ml">ml</option>
+                  <option value="pack">pack</option>
+                  <option value="box">box</option>
+                  <option value="bottle">bottle</option>
+                  <option value="dozen">dozen</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="priority">Priority</label>
+                <select id="priority">
+                  <option value="high">High</option>
+                  <option value="medium" selected>Medium</option>
+                  <option value="low">Low</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="category">Category</label>
+                <select id="category">
+                  <option>Groceries</option>
+                  <option>Household</option>
+                  <option>Personal Care</option>
+                  <option>Electronics</option>
+                  <option>Clothing</option>
+                  <option>Medicine</option>
+                  <option>Other</option>
+                </select>
+              </div>
+
+              <div class="field wide">
+                <label for="location">Location / shop</label>
+                <input id="location" maxlength="180" placeholder="e.g. DMart, Kukatpally / Google Maps location">
+              </div>
+
+              <div class="field wide">
+                <label for="link">Shopping link</label>
+                <input id="link" type="url" maxlength="500" placeholder="https://www.amazon.in/...">
+              </div>
+
+              <div class="field">
+                <label for="phone">Phone number</label>
+                <input id="phone" type="tel" maxlength="30" placeholder="+91 98765 43210">
+              </div>
+
+              <div class="field wide">
+                <label for="notes">Notes</label>
+                <input id="notes" maxlength="250" placeholder="Brand, size, color, special instructions...">
+              </div>
+
+              <div class="form-actions">
+                <button class="primary-btn" id="submitBtn" type="submit">Add to list</button>
+              </div>
+            </form>
+          </section>
+
+          <button id="viewListFromHome" class="large-list-link" type="button">
+            <span>
+              <strong>View your shopping list</strong>
+              <small>Open the full list and edit any item</small>
+            </span>
+            <span class="arrow">→</span>
+          </button>
+        </section>
+
+        <!-- SHOPPING LIST -->
+        <section class="page" id="page-list">
+          <header class="page-header list-header">
+            <div>
+              <div class="eyebrow">SHOPPING LIST</div>
+              <h1>Everything you need.</h1>
+              <p>Edit quantities, units, priorities and details anytime.</p>
+            </div>
+            <button id="addAnotherBtn" class="primary-btn" type="button">＋ Add item</button>
+          </header>
+
+          <section class="toolbar">
+            <div class="search-wrap">
+              <span>⌕</span>
+              <input id="searchInput" placeholder="Search your list...">
+            </div>
+            <select id="filterPriority" class="compact-select">
+              <option value="all">All priorities</option>
               <option value="high">High</option>
-              <option value="medium" selected>Medium</option>
+              <option value="medium">Medium</option>
               <option value="low">Low</option>
             </select>
-          </div>
-
-          <div class="field">
-            <label for="category">Category</label>
-            <select id="category">
-              <option>Groceries</option>
-              <option>Household</option>
-              <option>Personal Care</option>
-              <option>Electronics</option>
-              <option>Clothing</option>
-              <option>Medicine</option>
-              <option>Other</option>
+            <select id="filterCategory" class="compact-select">
+              <option value="all">All categories</option>
+              <option value="Groceries">Groceries</option>
+              <option value="Household">Household</option>
+              <option value="Personal Care">Personal Care</option>
+              <option value="Electronics">Electronics</option>
+              <option value="Clothing">Clothing</option>
+              <option value="Medicine">Medicine</option>
+              <option value="Other">Other</option>
             </select>
+          </section>
+
+          <div class="list-summary">
+            <span id="listSummaryText">0 items</span>
+            <span>•</span>
+            <span>Click <strong>Edit</strong> to change anything</span>
           </div>
 
-          <div class="field wide">
-            <label for="location">Location / shop</label>
-            <input id="location" maxlength="180" placeholder="e.g. DMart, Kukatpally / Google Maps location">
-          </div>
+          <section id="listState" class="state-card">Loading your list…</section>
+          <section id="itemsList" class="items-list"></section>
+        </section>
+      </main>
 
-          <div class="field wide">
-            <label for="link">Shopping link</label>
-            <input id="link" type="url" maxlength="500" placeholder="https://www.amazon.in/...">
-          </div>
+      <footer>
+        <span>Daily Cart</span>
+        <span>Supabase + GitHub Pages</span>
+      </footer>
+    </div>
+  </div>
 
-          <div class="field">
-            <label for="phone">Phone number</label>
-            <input id="phone" type="tel" maxlength="30" placeholder="+91 98765 43210">
-          </div>
-
-          <div class="field wide">
-            <label for="notes">Notes</label>
-            <input id="notes" maxlength="250" placeholder="Brand, size, color, special instructions...">
-          </div>
-
-          <div class="form-actions">
-            <button class="primary-btn" id="submitBtn" type="submit">Add to list</button>
-          </div>
-        </form>
-      </section>
-
-      <section class="toolbar">
-        <div class="search-wrap">
-          <span>⌕</span>
-          <input id="searchInput" placeholder="Search your list...">
+  <!-- EDIT MODAL -->
+  <div id="editModal" class="modal-backdrop" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="editModalTitle">
+      <div class="modal-header">
+        <div>
+          <div class="eyebrow">EDIT ITEM</div>
+          <h2 id="editModalTitle">Update your item</h2>
         </div>
-        <select id="filterPriority" class="compact-select">
-          <option value="all">All priorities</option>
-          <option value="high">High</option>
-          <option value="medium">Medium</option>
-          <option value="low">Low</option>
-        </select>
-        <select id="filterCategory" class="compact-select">
-          <option value="all">All categories</option>
-          <option value="Groceries">Groceries</option>
-          <option value="Household">Household</option>
-          <option value="Personal Care">Personal Care</option>
-          <option value="Electronics">Electronics</option>
-          <option value="Clothing">Clothing</option>
-          <option value="Medicine">Medicine</option>
-          <option value="Other">Other</option>
-        </select>
-      </section>
+        <button id="closeModalBtn" class="modal-close" type="button" aria-label="Close">×</button>
+      </div>
 
-      <section id="listState" class="state-card">Loading your list…</section>
-      <section id="itemsList" class="items-list"></section>
-    </main>
+      <form id="editForm" class="edit-grid">
+        <input type="hidden" id="editItemId">
 
-    <footer>
-      <span>Daily Cart</span>
-      <span>Supabase + GitHub Pages</span>
-    </footer>
+        <div class="field wide">
+          <label for="editName">Item name</label>
+          <input id="editName" required maxlength="120">
+        </div>
+
+        <div class="field">
+          <label for="editQuantity">Quantity</label>
+          <input id="editQuantity" type="number" min="1" step="1" required>
+        </div>
+
+        <div class="field">
+          <label for="editUnit">Unit</label>
+          <select id="editUnit">
+            <option value="pcs">pcs</option>
+            <option value="kg">kg</option>
+            <option value="g">g</option>
+            <option value="L">L</option>
+            <option value="ml">ml</option>
+            <option value="pack">pack</option>
+            <option value="box">box</option>
+            <option value="bottle">bottle</option>
+            <option value="dozen">dozen</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="editPriority">Priority</label>
+          <select id="editPriority">
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="editCategory">Category</label>
+          <select id="editCategory">
+            <option>Groceries</option>
+            <option>Household</option>
+            <option>Personal Care</option>
+            <option>Electronics</option>
+            <option>Clothing</option>
+            <option>Medicine</option>
+            <option>Other</option>
+          </select>
+        </div>
+
+        <div class="field wide">
+          <label for="editLocation">Location / shop</label>
+          <input id="editLocation" maxlength="180">
+        </div>
+
+        <div class="field wide">
+          <label for="editLink">Shopping link</label>
+          <input id="editLink" type="url" maxlength="500">
+        </div>
+
+        <div class="field">
+          <label for="editPhone">Phone number</label>
+          <input id="editPhone" type="tel" maxlength="30">
+        </div>
+
+        <div class="field wide">
+          <label for="editNotes">Notes</label>
+          <input id="editNotes" maxlength="250">
+        </div>
+
+        <div class="modal-actions">
+          <button id="cancelEditBtn" class="ghost-btn" type="button">Cancel</button>
+          <button class="primary-btn" id="saveEditBtn" type="submit">Save changes</button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
