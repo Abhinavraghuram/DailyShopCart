@@ -581,6 +581,22 @@ document.querySelectorAll(".nav-btn").forEach(btn => {
 
 $("viewListFromHome").addEventListener("click", () => showPage("list"));
 
+$("totalItemsCard").addEventListener("click", () => {
+  $("searchInput").value = "";
+  $("filterPriority").value = "all";
+  $("filterCategory").value = "all";
+  renderList();
+  showPage("list");
+});
+
+$("highPriorityCard").addEventListener("click", () => {
+  $("searchInput").value = "";
+  $("filterPriority").value = "high";
+  $("filterCategory").value = "all";
+  renderList();
+  showPage("list");
+});
+
 $("addAnotherBtn").addEventListener("click", () => {
   resetForm();
   showPage("home");
