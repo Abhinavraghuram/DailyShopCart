@@ -160,6 +160,26 @@ function collectMainForm() {
   };
 }
 
+
+function applyTheme(theme) {
+  const dark = theme === "dark";
+  document.body.classList.toggle("dark-mode", dark);
+
+  const toggle = $("themeToggle");
+  if (toggle) {
+    toggle.setAttribute("aria-label", dark ? "Switch to light mode" : "Switch to dark mode");
+    toggle.title = dark ? "Switch to light mode" : "Switch to dark mode";
+  }
+
+  localStorage.setItem("dailyCartTheme", dark ? "dark" : "light");
+}
+
+function initTheme() {
+  const saved = localStorage.getItem("dailyCartTheme");
+  const preferred = saved || (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  applyTheme(preferred);
+}
+
 function showPage(page) {
   state.currentPage = page;
 
@@ -774,6 +794,11 @@ document.querySelectorAll(".top-nav-btn").forEach(btn => {
   btn.addEventListener("click", () => showPage(btn.dataset.page));
 });
 
+$("themeToggle").addEventListener("click", () => {
+  const isDark = document.body.classList.contains("dark-mode");
+  applyTheme(isDark ? "light" : "dark");
+});
+
 $("viewListFromHome").addEventListener("click", () => showPage("list"));
 
 $("totalItemsCard").addEventListener("click", () => {
@@ -847,6 +872,7 @@ $("shoppingModeModal").addEventListener("click", (e) => {
 
 window.addEventListener("hashchange", initPage);
 
+initTheme();
 initPage();
 renderStats();
 renderList();
