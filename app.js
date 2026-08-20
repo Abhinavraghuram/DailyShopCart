@@ -47,7 +47,10 @@ function showUndoToast(item) {
   clearTimeout(window.__toastTimer);
   clearTimeout(state.undoTimer);
 
+  // Store only the original item data in memory.
+  // The database generates a fresh UUID when Undo restores it.
   state.undoItem = structuredClone(item);
+  state.undoDeleting = false;
 
   el.innerHTML = `
     <span class="undo-toast">
@@ -60,25 +63,47 @@ function showUndoToast(item) {
   const undoBtn = el.querySelector("#undoCompleteBtn");
 
   undoBtn.addEventListener("click", async () => {
-    if (!state.undoItem || state.undoDeleting) return;
+    if (!state.undoItem || state.undoDeleting || !configured) return;
 
     state.undoDeleting = true;
     undoBtn.disabled = true;
     undoBtn.textContent = "RESTORING…";
 
-    const itemToRestore = { ...state.undoItem };
+    const oldItem = { ...state.undoItem };
 
-    // The old row was already deleted. Restore it as a new row so
-    // PostgreSQL generates a fresh UUID and all default fields work.
-    delete itemToRestore.id;
-    delete itemToRestore.priority_order;
+    // IMPORTANT:
+    // Only send real table columns. Do not send:
+    // - id (old deleted UUID)
+    // - priority_order (generated column)
+    // This lets Supabase generate a fresh row safely.
+    const restorePayload = {
+      name: oldItem.name ?? "",
+      quantity: Number(oldItem.quantity ?? 1),
+      unit: oldItem.unit ?? "pcs",
+      priority: oldItem.priority ?? "medium",
+      category: oldItem.category ?? "Groceries",
+      location: oldItem.location ?? null,
+      link: oldItem.link ?? null,
+      phone: oldItem.phone ?? null,
+      notes: oldItem.notes ?? null,
+      created_at: oldItem.created_at ?? new Date().toISOString()
+    };
 
     try {
-      const { error } = await client
+      const { data: restoredRow, error } = await client
         .from("shopping_items")
-        .insert(itemToRestore);
+        .insert([restorePayload])
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Daily Cart Undo restore error:", error);
+        throw error;
+      }
+
+      if (!restoredRow) {
+        throw new Error("Supabase did not return the restored item.");
+      }
 
       state.undoItem = null;
       state.undoDeleting = false;
@@ -88,15 +113,17 @@ function showUndoToast(item) {
       showToast("↩️ Item restored.");
       await loadItems();
 
-      // If Shopping Mode is open, immediately reflect the restored item.
       if (!$("shoppingModeModal").hidden) {
         renderShoppingMode();
       }
     } catch (err) {
+      console.error("Daily Cart Undo failed:", err);
+
       state.undoDeleting = false;
       undoBtn.disabled = false;
       undoBtn.textContent = "UNDO";
-      showToast(`Could not restore item: ${err.message || "Unknown error"}`);
+
+      showToast(`Undo failed: ${err.message || "Supabase restore failed"}`);
     }
   });
 
