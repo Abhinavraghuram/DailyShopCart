@@ -1,7 +1,7 @@
 /* Daily Cart — static Supabase frontend */
 
-const SUPABASE_URL = "PASTE_YOUR_SUPABASE_URL_HERE";
-const SUPABASE_ANON_KEY = "PASTE_YOUR_SUPABASE_ANON_KEY_HERE";
+const SUPABASE_URL = "sb_publishable_Wy9yeMRLXTfBL2oeYSsRpA_sxYx4NJm";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVjd2t2c2RzaG1kcGZ1cXJ4dWlmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcxOTcyMTMsImV4cCI6MjEwMjc3MzIxM30.6XqbmJNttIrZenHsDEqf-49fsxoQus4fMj6eeynu0r4";
 
 const configured = !SUPABASE_URL.includes("PASTE_") && !SUPABASE_ANON_KEY.includes("PASTE_");
 const client = configured ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
