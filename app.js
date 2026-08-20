@@ -1,7 +1,7 @@
 /* Daily Cart — static Supabase frontend */
 
-const SUPABASE_URL = "https://ucwkvsdshmdpfuqrxuif.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVjd2t2c2RzaG1kcGZ1cXJ4dWlmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcxOTcyMTMsImV4cCI6MjEwMjc3MzIxM30.6XqbmJNttIrZenHsDEqf-49fsxoQus4fMj6eeynu0r4";
+const SUPABASE_URL = "PASTE_YOUR_SUPABASE_URL_HERE";
+const SUPABASE_ANON_KEY = "PASTE_YOUR_SUPABASE_ANON_KEY_HERE";
 
 const configured = !SUPABASE_URL.includes("PASTE_") && !SUPABASE_ANON_KEY.includes("PASTE_");
 const client = configured ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
@@ -43,32 +43,66 @@ function showToast(message) {
 
 function showUndoToast(item) {
   const el = $("toast");
-  el.innerHTML = `<span class="undo-toast"><span>✅ ${esc(item.name)} removed</span><button id="undoCompleteBtn" type="button">UNDO</button></span>`;
-  el.classList.add("show");
 
   clearTimeout(window.__toastTimer);
   clearTimeout(state.undoTimer);
 
   state.undoItem = structuredClone(item);
 
-  el.querySelector("#undoCompleteBtn").addEventListener("click", async () => {
-    clearTimeout(state.undoTimer);
-    state.undoTimer = null;
+  el.innerHTML = `
+    <span class="undo-toast">
+      <span>✅ ${esc(item.name)} removed</span>
+      <button id="undoCompleteBtn" type="button">UNDO</button>
+    </span>
+  `;
+  el.classList.add("show");
+
+  const undoBtn = el.querySelector("#undoCompleteBtn");
+
+  undoBtn.addEventListener("click", async () => {
+    if (!state.undoItem || state.undoDeleting) return;
+
+    state.undoDeleting = true;
+    undoBtn.disabled = true;
+    undoBtn.textContent = "RESTORING…";
+
+    const itemToRestore = { ...state.undoItem };
+
+    // The old row was already deleted. Restore it as a new row so
+    // PostgreSQL generates a fresh UUID and all default fields work.
+    delete itemToRestore.id;
+    delete itemToRestore.priority_order;
 
     try {
-      const restored = { ...state.undoItem };
-      delete restored.priority_order;
-      await saveItem(restored, null);
-      showToast("Item restored.");
+      const { error } = await client
+        .from("shopping_items")
+        .insert(itemToRestore);
+
+      if (error) throw error;
+
       state.undoItem = null;
+      state.undoDeleting = false;
+      clearTimeout(state.undoTimer);
+
+      el.classList.remove("show");
+      showToast("↩️ Item restored.");
       await loadItems();
+
+      // If Shopping Mode is open, immediately reflect the restored item.
+      if (!$("shoppingModeModal").hidden) {
+        renderShoppingMode();
+      }
     } catch (err) {
-      showToast(err.message || "Could not restore item.");
+      state.undoDeleting = false;
+      undoBtn.disabled = false;
+      undoBtn.textContent = "UNDO";
+      showToast(`Could not restore item: ${err.message || "Unknown error"}`);
     }
   });
 
   state.undoTimer = setTimeout(() => {
     state.undoItem = null;
+    state.undoDeleting = false;
     el.classList.remove("show");
   }, 5000);
 }
@@ -488,6 +522,8 @@ $("itemsList").addEventListener("click", async (e) => {
 
     if (action === "delete") {
       await deleteItem(id);
+      state.undoItem = null;
+      clearTimeout(state.undoTimer);
       showToast("Item deleted.");
       await loadItems();
     }
