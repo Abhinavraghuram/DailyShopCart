@@ -15,30 +15,36 @@
 
     <header class="app-header">
       <div class="app-header-inner">
-        <div class="app-brand">
-          <div class="brand-mark">🛒</div>
-          <div>
-            <strong>Daily Cart</strong>
-            <span>Personal shopping</span>
+        <div class="app-brand-row">
+          <div class="app-brand">
+            <div class="brand-mark">🛒</div>
+            <div>
+              <strong>Daily Cart</strong>
+              <span>Personal shopping</span>
+            </div>
           </div>
         </div>
 
-        <nav class="top-nav" aria-label="Main navigation">
-          <button class="top-nav-btn active" data-page="home" type="button">
-            <span class="nav-icon">⌂</span>
-            <span>Home</span>
-          </button>
-          <button class="top-nav-btn" data-page="list" type="button">
-            <span class="nav-icon">☷</span>
-            <span>Shopping List</span>
-            <b id="sidebarCount">0</b>
-          </button>
-          <button class="top-nav-btn" data-page="frequent" type="button">
-            <span class="nav-icon">★</span>
-            <span>Frequent</span>
-            <b id="frequentSidebarCount">0</b>
-          </button>
-        </nav>
+        <div class="top-nav-shell">
+          <nav class="top-nav" aria-label="Main navigation">
+            <button class="top-nav-btn active" data-page="home" type="button">
+              <span class="nav-icon">🏠</span>
+              <span>Home</span>
+            </button>
+
+            <button class="top-nav-btn" data-page="list" type="button">
+              <span class="nav-icon">🛒</span>
+              <span>Shopping List</span>
+              <b id="sidebarCount">0</b>
+            </button>
+
+            <button class="top-nav-btn" data-page="frequent" type="button">
+              <span class="nav-icon">⭐</span>
+              <span>Frequent Buying</span>
+              <b id="frequentSidebarCount">0</b>
+            </button>
+          </nav>
+        </div>
       </div>
     </header>
 
